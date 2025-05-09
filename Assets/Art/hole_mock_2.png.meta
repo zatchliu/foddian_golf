@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: cd152a5fb8240dd42bb2dd9b6191fdc8
+guid: b2ff6f82ad0cec84e91818efd9bd088b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2330074775968998834
-    second: right_upper_arm_0
+      213: 8152978202738350455
+    second: hole_mock_2_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -75,7 +75,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: right_upper_arm_0
+      name: hole_mock_2_0
       rect:
         serializedVersion: 2
-        x: 47
-        y: 75
-        width: 12
-        height: 23
+        x: 0
+        y: 0
+        width: 2048
+        height: 360
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2b5eab9d9a6165020800000000000000
-      internalID: 2330074775968998834
+      spriteID: 779d8b3aa72352170800000000000000
+      internalID: 8152978202738350455
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      right_upper_arm_0: 2330074775968998834
+      hole_mock_2_0: 8152978202738350455
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
