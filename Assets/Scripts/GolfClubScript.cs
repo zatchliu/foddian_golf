@@ -13,7 +13,7 @@ public class GolfClubScript : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        var mousePosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.nearClipPlane));
+        var mousePosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
         var direction = mousePosition - pivotPoint.position;
         if (direction.magnitude > radius)
         {
