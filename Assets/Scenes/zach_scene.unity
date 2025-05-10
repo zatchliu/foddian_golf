@@ -571,7 +571,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pivotPoint: {fileID: 22486592}
-  radius: 1
+  radius: 6
 --- !u!1 &77050917
 GameObject:
   m_ObjectHideFlags: 0
