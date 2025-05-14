@@ -6,6 +6,10 @@ TagManager:
   tags:
   - Undefined
   - Course
+  - Water
+  - Ball
+  - OutOfBounds
+  - Sand
   layers:
   - Default
   - TransparentFX

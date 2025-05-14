@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 922c9975493584546967f68db922901e
+guid: 9b26bf0bbc035427fa88cfadde0d3588
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -853768875122015413
-    second: golf_ball_0
+      213: 5007716167173107716
+    second: hole_mock_up_4_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,23 +113,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: golf_ball_0
+      name: hole_mock_up_4_0
       rect:
         serializedVersion: 2
-        x: 5
-        y: 5
-        width: 6
-        height: 6
+        x: 275
+        y: 0
+        width: 608
+        height: 159
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b4341164bbdc624f0800000000000000
-      internalID: -853768875122015413
+      spriteID: 4007550725bfe7540800000000000000
+      internalID: 5007716167173107716
       vertices: []
       indices: 
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 32134d54d31ba4ec5857a4d68d7cb0ff
     internalID: 0
     vertices: []
     indices: 
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      golf_ball_0: -853768875122015413
+      hole_mock_up_4_0: 5007716167173107716
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -91,6 +91,7 @@ void OnCollisionEnter2D(Collision2D col) {
 
 
 using UnityEngine;
+using System.Collections;
 
 /// Attach to the club‑head collider
 public class ClubImpact2D : MonoBehaviour
@@ -109,12 +110,17 @@ public class ClubImpact2D : MonoBehaviour
  
     public Rigidbody2D rb;
 
+    private bool _hasHit = false;
+    private Collider2D _clubCol;
+
     void Awake() {
         rb = GetComponent<Rigidbody2D>();
-    } 
+        _clubCol = GetComponent<Collider2D>();    } 
 
     void FixedUpdate()
     {
+        if (_hasHit) return;
+
         float pivotZ = Camera.main.WorldToScreenPoint(pivotPoint.position).z;
         Vector3 ms = new Vector3(Input.mousePosition.x, Input.mousePosition.y, pivotZ);
         Vector3 mw3 = Camera.main.ScreenToWorldPoint(ms);
@@ -160,7 +166,10 @@ public class ClubImpact2D : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D col)
     {
+        if (_hasHit) return;
         if (!col.collider.CompareTag("Ball")) return;
+
+        _hasHit = true;
 
         // --- 1.  raw club‑head data at impact -------------------------------
         Rigidbody2D clubRb   = GetComponent<Rigidbody2D>();
@@ -179,7 +188,7 @@ public class ClubImpact2D : MonoBehaviour
                         - Mathf.Clamp(-adjAoA * leanPerAoA, 0f, 15f)
                         + st.loftAdj;
 
-        float launchDeg = dynLoft - launchLoss;                // e.g. 18–20°
+        float launchDeg = dynLoft - launchLoss;          
         float launchRad = launchDeg * Mathf.Deg2Rad;
 
         // --- 3.  ball speed & spin -----------------------------------------
@@ -189,19 +198,52 @@ public class ClubImpact2D : MonoBehaviour
         float spinRad  = spinRpm * Mathf.Deg2Rad / 60f;        // to rad/s
 
         // --- 4.  instantiate / reset ball ----------------------------------
-        Rigidbody2D ball = col.rigidbody;                      // using collided ball
-        // if you prefer always‑new balls: Instantiate(ballPrefab, ballSpawnPoint.position, Quaternion.identity).GetComponent<Rigidbody2D>();
+        Rigidbody2D ball = col.rigidbody; 
+        GolfBallPhysics bf  = ball.GetComponent<GolfBallPhysics>();
+        bf.RecordTeePosition();
 
-        ball.linearVelocity    = new Vector2(Mathf.Cos(launchRad), Mathf.Sin(launchRad)) * ballSpd;
-        ball.angularVelocity = spinRad * Mathf.Rad2Deg;       // for visual spin (deg/s)
+        // --- 5.  Sand Penalty
+        float sandFactor = bf.InSand ? bf.sandPenaltyFactor : 1f;
+        float finalSpd   = ballSpd * sandFactor;
+
+        ball.linearVelocity    = new Vector2(Mathf.Cos(launchRad), Mathf.Sin(launchRad)) * finalSpd;
+        ball.angularVelocity = spinRad * Mathf.Rad2Deg; 
+
+
+        // disable club–ball collisions from now on
+        Collider2D clubCol = GetComponent<Collider2D>();
+        Collider2D ballCol = col.collider;
+        Physics2D.IgnoreCollision(clubCol, ballCol, true);
+
+        // re-enable collision after a short delay, if you ever need it back
+        StartCoroutine(ReenableContact(clubCol, ballCol));  
+
+        Debug.Log($"finalspd={finalSpd:F1}, ");
+
+        float mag = ball.linearVelocity.magnitude;
+        Debug.Log($"[Launch] speed = {mag:F3}");
 
         //BallFlight2D bf  = ball.GetComponent<BallFlight2D>();
-        GolfBallPhysics bf  = ball.GetComponent<GolfBallPhysics>();
+        
 
-        //bf.SetSpin(spinRad);
-
-
-        // OPTIONAL small backspin torque so the sprite spins correctly:
+        // Small backspin torque so the sprite spins correctly:
         // ball.AddTorque(-Mathf.Sign(vClub.x) * spinRad * 0.001f, ForceMode2D.Impulse);
+
+
+    }
+
+
+    private IEnumerator ReenableContact(Collider2D clubCol, Collider2D ballCol)
+    {
+        //yield return new WaitForFixedUpdate();   // wait at least one physics step
+        while(Vector2.Distance(transform.position, ballCol.transform.position) < 1.0f)
+            yield return null;
+
+         _hasHit = false;
+
+
+        Physics2D.IgnoreCollision(clubCol, ballCol, false);
+
+       
     }
 }

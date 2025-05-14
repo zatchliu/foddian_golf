@@ -11,10 +11,6 @@ public class CameraFollow2D : MonoBehaviour
     public string backgroundTag = "Course";  
 
 
-
-
-
-
     void LateUpdate()
     {
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class GolfBallPhysics : MonoBehaviour
@@ -11,12 +12,27 @@ public class GolfBallPhysics : MonoBehaviour
     public Rigidbody2D rb;
 
     public bool isGrounded;
+    private Vector2 lastTeePosition;
+
+    [Header("Reset Time")]
+    public float ResetDelay = 2f;  // seconds to “sit in misery” 
+
+    [HideInInspector] public bool InSand = false;
+    [Tooltip("Bunker Penalty")]
+    public float sandPenaltyFactor = 0.5f;
+
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.linearDamping = dragInAir;
         rb.gravityScale = gravityScale;
+    }
+
+    void Start()
+    {
+        // initialize your tee position
+        lastTeePosition = transform.position;
     }
 
     void FixedUpdate()
@@ -28,6 +44,8 @@ public class GolfBallPhysics : MonoBehaviour
             if (Mathf.Abs(rb.linearVelocity.x) < 0.05f)
                 rb.linearVelocity = Vector2.zero;
         }
+        Debug.DrawRay(transform.position, GetComponent<Rigidbody2D>().linearVelocity, Color.cyan, 0.1f);
+
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -41,6 +59,67 @@ public class GolfBallPhysics : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
             isGrounded = false;
     }
+
+    // call this whenever the player takes a shot
+    public void RecordTeePosition()
+    {
+        lastTeePosition = transform.position;
+    }
+
+    // trigger handler for water
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Water")) {
+            StartCoroutine(HandleReset("Water Hazard"));
+        }
+       
+        if (other.CompareTag("Sand")) {
+            Debug.Log("In sand");
+            InSand = true;
+        }
+            
+    }
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("OutOfBounds")) {
+            StartCoroutine(HandleReset("Out of range!"));
+        }
+
+        if (other.CompareTag("Sand")) {
+            InSand = false;
+        } 
+            
+    }
+
+    private IEnumerator HandleReset(string reasom)
+    {
+        // 1) Disable the club (and any other scripts you want frozen)
+        var club = FindObjectOfType<ClubImpact2D>();
+        var player = FindObjectOfType<PlayerMoveToBall>();
+        if (club != null) club.enabled = false;
+        if (player != null) player.enabled = false;
+
+
+        // 2) (Optional) play splash VFX/audio here
+
+        // 3) Wait in misery
+        yield return new WaitForSeconds(ResetDelay);
+
+        // 4) Stop all ball motion
+        var rb = GetComponent<Rigidbody2D>();
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+
+        // 5) Move back to last tee
+        transform.position = lastTeePosition;
+
+        // 6) Re-enable the club
+        if (club != null) club.enabled = true;
+        if (player != null) player.enabled = true;
+    }
+
+
 }
 
 
