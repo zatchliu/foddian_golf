@@ -6,16 +6,24 @@ public class GolfClubScript : MonoBehaviour
     [Header("Club Motion")]
     public Transform pivotPoint;
     public float radius = 1.0f;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public Transform leftForearm; // Reference to the left forearm
+    public Transform gripPoint; // Point where the forearm should connect to the club
 
     [Header("Hit Tuning")]
     public float hitStrength = 0.5f;
 
     Rigidbody2D rb;
+    Rigidbody2D forearmRb;
+    Vector2 forearmOffset; // Store the local offset from grip point to forearm
 
     void Start()
     {
-        
+        if (leftForearm != null && gripPoint != null)
+        {
+            forearmRb = leftForearm.GetComponent<Rigidbody2D>();
+            // Calculate the initial offset between forearm and grip point
+            forearmOffset = leftForearm.position - gripPoint.position;
+        }
     }
 
     void Awake()
@@ -26,31 +34,33 @@ public class GolfClubScript : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        // 1) Get mouse in world‐space (at the camera’s near plane)
-        Vector3 mouseWorld3 = Camera.main.ScreenToWorldPoint(
-            new Vector3(
-                Input.mousePosition.x,
-                Input.mousePosition.y,
-                Camera.main.nearClipPlane
-            )
-        );
-
-        // 2) Work entirely in Vector2 from here on out
-        Vector2 pivot2     = pivotPoint.position;
-        Vector2 mouseWorld = mouseWorld3;
-
-        // 3) Clamp to your circle
-        Vector2 direction = mouseWorld - pivot2;
+        var mousePosition = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
+        var direction = mousePosition - pivotPoint.position;
         if (direction.magnitude > radius)
-            direction = direction.normalized * radius;
+        {
+            direction.Normalize();
+            direction *= radius;
+            mousePosition = pivotPoint.position + direction;
+        }
 
-        // 4) Compute targetPos as a Vector2—no more mixing types
-        Vector2 targetPos = pivot2 + direction;
-
-        // 5) MovePosition will calculate rb.velocity for you
-        rb.MovePosition(targetPos);
+        GetComponent<Rigidbody2D>().MovePosition(mousePosition);
+        /*
+        // Update forearm position and rotation to follow the club
+        if (leftForearm != null && gripPoint != null && forearmRb != null)
+        {
+            // Calculate the angle between the club and vertical
+            float angle = Mathf.Atan2(direction.x, -direction.y) * Mathf.Rad2Deg;
+            
+            // Use MovePosition and MoveRotation to work with physics
+            forearmRb.MovePosition(gripPoint.position);
+            forearmRb.MoveRotation(angle);
+            
+            // Ensure the forearm's velocity matches the club's velocity
+            forearmRb.linearVelocity = rb.linearVelocity;
+            forearmRb.angularVelocity = rb.angularVelocity;
+        }
+        */
     }
-
 
     void OnCollisionEnter2D(Collision2D col)
     {
@@ -60,7 +70,7 @@ public class GolfClubScript : MonoBehaviour
             ContactPoint2D contact = col.GetContact(0);
             Vector2 point = contact.point;
 
-            // get the club’s true velocity at that point
+            // get the club's true velocity at that point
             Vector2 clubVel = rb.GetPointVelocity(point);
 
             // apply it as an impulse to the ball
@@ -68,5 +78,4 @@ public class GolfClubScript : MonoBehaviour
             ballRb.AddForceAtPosition(clubVel * hitStrength, point, ForceMode2D.Impulse);
         }
     }
-
 }
