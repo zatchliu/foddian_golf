@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      hole_mock_up_4_0: 5007716167173107716
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
