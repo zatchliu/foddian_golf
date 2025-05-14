@@ -115,7 +115,10 @@ public class ClubImpact2D : MonoBehaviour
 
     void Awake() {
         rb = GetComponent<Rigidbody2D>();
-        _clubCol = GetComponent<Collider2D>();    } 
+        _clubCol = GetComponent<Collider2D>();   
+         
+    
+    } 
 
     void FixedUpdate()
     {
@@ -176,6 +179,8 @@ public class ClubImpact2D : MonoBehaviour
         Vector2      contact = col.GetContact(0).point;
         Vector2      vClub   = clubRb.GetPointVelocity(contact);
         float        clubSpd = vClub.magnitude;                // m/s
+        float dirSign = Mathf.Sign(vClub.x);
+
 
         // attack‑angle <0 = descending (down on ball)
         float attackAngleDeg = Vector2.SignedAngle(Vector2.right, vClub);
@@ -197,6 +202,8 @@ public class ClubImpact2D : MonoBehaviour
                          * Mathf.InverseLerp(0f,50f, clubSpd); // scale for soft swings
         float spinRad  = spinRpm * Mathf.Deg2Rad / 60f;        // to rad/s
 
+        
+
         // --- 4.  instantiate / reset ball ----------------------------------
         Rigidbody2D ball = col.rigidbody; 
         GolfBallPhysics bf  = ball.GetComponent<GolfBallPhysics>();
@@ -206,8 +213,8 @@ public class ClubImpact2D : MonoBehaviour
         float sandFactor = bf.InSand ? bf.sandPenaltyFactor : 1f;
         float finalSpd   = ballSpd * sandFactor;
 
-        ball.linearVelocity    = new Vector2(Mathf.Cos(launchRad), Mathf.Sin(launchRad)) * finalSpd;
-        ball.angularVelocity = spinRad * Mathf.Rad2Deg; 
+        ball.linearVelocity    = new Vector2(Mathf.Cos(launchRad), Mathf.Sin(launchRad)) * finalSpd * dirSign;
+        ball.angularVelocity = spinRad * Mathf.Rad2Deg * dirSign; 
 
 
         // disable club–ball collisions from now on
@@ -233,17 +240,26 @@ public class ClubImpact2D : MonoBehaviour
     }
 
 
-    private IEnumerator ReenableContact(Collider2D clubCol, Collider2D ballCol)
+
+
+
+
+
+  private IEnumerator ReenableContact(Collider2D clubCol, Collider2D ballCol)
     {
-        //yield return new WaitForFixedUpdate();   // wait at least one physics step
-        while(Vector2.Distance(transform.position, ballCol.transform.position) < 1.0f)
+        float timer = 0f;
+        const float maxWait = 1.5f; // half a second
+
+        // wait until the ball is far enough away, or timeout
+        while (Vector2.Distance(transform.position, ballCol.transform.position) < 1f 
+            && timer < maxWait)
+        {
+            timer += Time.deltaTime;
             yield return null;
+        }
 
-         _hasHit = false;
-
-
+        _hasHit = false;
         Physics2D.IgnoreCollision(clubCol, ballCol, false);
-
-       
     }
 }
+

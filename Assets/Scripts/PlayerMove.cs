@@ -10,19 +10,20 @@ public class PlayerMoveToBall : MonoBehaviour
 
     public Rigidbody2D rb;
     private GolfBallPhysics ballPhysics;
-    //public BallFlight2D ballPhysics;
     public float stanceOffsetX;
+
+    private Vector3 startPos;
 
     void Awake()
     {
         rb           = GetComponent<Rigidbody2D>();
         ballPhysics  = ball.GetComponent<GolfBallPhysics>();
-        //ballPhysics  = ball.GetComponent<BallFlight2D>();
 
         rb.bodyType  = RigidbodyType2D.Kinematic;
 
-        // cache how far in local space your stanceCenter sits from the Player origin
         //stanceOffsetX = stanceCenter.localPosition.x;
+
+        startPos = transform.position;
     }
 
     void FixedUpdate()
@@ -41,5 +42,13 @@ public class PlayerMoveToBall : MonoBehaviour
 
             rb.MovePosition(nextPos);
         }
+    }
+
+    public void ResetToStart()
+    {
+        transform.position = startPos;
+
+        // no velocity on a kinematic body but just in case:
+        // rb.MovePosition(startPos);
     }
 }

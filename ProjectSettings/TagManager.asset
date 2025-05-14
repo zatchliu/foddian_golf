@@ -10,6 +10,7 @@ TagManager:
   - Ball
   - OutOfBounds
   - Sand
+  - Hole
   layers:
   - Default
   - TransparentFX

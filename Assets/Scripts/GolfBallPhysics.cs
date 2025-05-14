@@ -7,19 +7,32 @@ public class GolfBallPhysics : MonoBehaviour
     [Header("Physics Settings")]
     public float dragInAir = 0.2f;
     public float gravityScale = 2.5f;
-    public float rollingResistance = 0.9f; // Deceleration factor when rolling
-
-    public Rigidbody2D rb;
-
-    public bool isGrounded;
-    private Vector2 lastTeePosition;
+    public float rollingResistance = 0.9f;
 
     [Header("Reset Time")]
-    public float ResetDelay = 2f;  // seconds to “sit in misery” 
+    public float ResetDelay = 2f;  
 
     [HideInInspector] public bool InSand = false;
-    [Tooltip("Bunker Penalty")]
+    [Tooltip("0–1: fraction of full speed when in the bunker")]
     public float sandPenaltyFactor = 0.5f;
+
+    [Header("Hole & End-Game")]
+    public float holeDelay = 2f;      
+    public GameObject gameOverPanel;  
+
+    // runtime state
+    public Rigidbody2D rb;
+    public SpriteRenderer sr;
+    private Collider2D col;
+    private Vector2 lastTeePosition;
+    private Vector2 firstTeePosition;
+    public bool isGrounded;
+    public bool inSand;
+    public bool inWater;
+
+    public int Strokes { get; set; }
+
+
 
 
     void Awake()
@@ -27,13 +40,34 @@ public class GolfBallPhysics : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         rb.linearDamping = dragInAir;
         rb.gravityScale = gravityScale;
+
+        sr    = GetComponent<SpriteRenderer>();
+        col   = GetComponent<Collider2D>();
+
+    firstTeePosition = transform.position;        
+    lastTeePosition = transform.position;        
+    DeactivatePhysics();
     }
 
-    void Start()
+/*     void Start()
     {
-        // initialize your tee position
+        // initialize tee position
         lastTeePosition = transform.position;
+    } */
+
+    public void ActivatePhysics()
+    {
+        rb.simulated = true;
+        rb.bodyType  = RigidbodyType2D.Dynamic;
     }
+
+    public void DeactivatePhysics()
+    {
+        rb.simulated       = false;
+        rb.linearVelocity        = Vector2.zero;
+        rb.angularVelocity = 0f;
+    }
+
 
     void FixedUpdate()
     {
@@ -60,11 +94,61 @@ public class GolfBallPhysics : MonoBehaviour
             isGrounded = false;
     }
 
+    public void ResetToTee()
+    {
+        transform.position   = lastTeePosition;
+        rb.linearVelocity          = Vector2.zero;
+        rb.angularVelocity   = 0f;
+        InSand               = false;
+        isGrounded           = false;
+        // do *not* reset strokes here if you want to count penalties
+        sr.enabled           = true;
+        col.enabled          = true;
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
+    }
+
+        public void ResetToTeeNewGame()
+    {
+        transform.position   = firstTeePosition;
+        rb.linearVelocity          = Vector2.zero;
+        rb.angularVelocity   = 0f;
+        InSand               = false;
+        isGrounded           = false;
+        // do *not* reset strokes here if you want to count penalties
+        sr.enabled           = true;
+        col.enabled          = true;
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
+    }
+
+
     // call this whenever the player takes a shot
     public void RecordTeePosition()
     {
         lastTeePosition = transform.position;
+        Strokes++;
     }
+
+    private IEnumerator HandleBallInHole()
+    {
+        // 1) stop physics & hide the ball
+        DeactivatePhysics();
+        sr.enabled  = false;
+        col.enabled = false;
+
+        // 2) notify GameManager (increments hole state)
+        GameManager.Instance.OnBallInHole();
+
+        // 3) wait a moment before showing GameOver UI
+        yield return new WaitForSeconds(holeDelay);
+
+        // 4) show the Game Over / Play Again UI
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+    }
+    
+
 
     // trigger handler for water
     void OnTriggerEnter2D(Collider2D other)
@@ -77,7 +161,12 @@ public class GolfBallPhysics : MonoBehaviour
             Debug.Log("In sand");
             InSand = true;
         }
-            
+
+        if (other.CompareTag("Hole")) {
+            Debug.Log("In Hole");
+            StartCoroutine(HandleBallInHole());
+        }
+      
     }
 
     void OnTriggerExit2D(Collider2D other)
@@ -107,9 +196,7 @@ public class GolfBallPhysics : MonoBehaviour
         yield return new WaitForSeconds(ResetDelay);
 
         // 4) Stop all ball motion
-        var rb = GetComponent<Rigidbody2D>();
-        rb.linearVelocity = Vector2.zero;
-        rb.angularVelocity = 0f;
+        ResetToTee();
 
         // 5) Move back to last tee
         transform.position = lastTeePosition;
@@ -117,6 +204,15 @@ public class GolfBallPhysics : MonoBehaviour
         // 6) Re-enable the club
         if (club != null) club.enabled = true;
         if (player != null) player.enabled = true;
+    }
+
+    public float CurrentTerrainPenalty
+    {
+        get
+        {
+            if (inSand)  return sandPenaltyFactor;
+            return 1f;
+        }
     }
 
 
