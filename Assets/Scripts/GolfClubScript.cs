@@ -80,26 +80,29 @@ public class ClubImpact2D : MonoBehaviour
     }
 
     [Header("Club spec")]
-    [Range(30f,45f)] public float staticLoftDeg = 38f;   // 8‑iron ≈37–39°, 9‑iron ≈40–44°
+    [Range(30f,45f)] public float staticLoftDeg = 38f;
     [Range(1.25f,1.35f)] public float smashFactor = 1.30f;
 
     [Header("Ball prefab")]
-    public GameObject ballPrefab;           // assign in inspector
-    public Transform  ballSpawnPoint;       // usually on StanceCenter
+    public GameObject ballPrefab;           
+    public Transform  ballSpawnPoint;      
 
-    const float baseShaftLean = 10f;        // ° lost to forward‑lean on a stock shot
-    const float leanPerAoA   = 0.4f;        // extra lean per degree downward
-    const float launchLoss   = 2f;          // ball launches a hair under dynamic loft
-    const float spinPerLoft  = 200f;        // rpm ≈ 200 × dynamic loft @ full swing
+    const float baseShaftLean = 10f;       
+    const float leanPerAoA   = 0.4f;       
+    const float launchLoss   = 2f;         
+    const float spinPerLoft  = 200f;       
 
     [System.Serializable] public struct ShotType {
     public string name;
-    public float aoaAdj;     // e.g. punch -2°, high +3°
-    public float loftAdj;    // e.g. punch -5°, high +5°
+    public float aoaAdj;   
+    public float loftAdj;   
     }
-    public ShotType[] shotTypes;     // define in Inspector
-    public int        currentShot;   // expose via UI
+    public ShotType[] shotTypes;     
+    public int        currentShot;  
 
+    [Header("Audio")]
+    public AudioSource audioSource;    
+    public AudioClip hitSound;          
 
 
     void OnCollisionEnter2D(Collision2D col)
@@ -115,13 +118,12 @@ public class ClubImpact2D : MonoBehaviour
         Rigidbody2D clubRb   = GetComponent<Rigidbody2D>();
         Vector2      contact = col.GetContact(0).point;
         Vector2      vClub   = clubRb.GetPointVelocity(contact);
-        float        clubSpd = vClub.magnitude;                // m/s
+        float        clubSpd = vClub.magnitude;               
         float dirSign = Mathf.Sign(vClub.x);
 
 
-        // attack‑angle <0 = descending (down on ball)
-        float attackAngleDeg = Vector2.SignedAngle(Vector2.right, vClub);
 
+        float attackAngleDeg = Vector2.SignedAngle(Vector2.right, vClub);
         // --- 2.  derive dynamic loft & launch‑angle 
         ShotType st   = shotTypes[currentShot];
         float adjAoA  = attackAngleDeg + st.aoaAdj;
@@ -134,10 +136,10 @@ public class ClubImpact2D : MonoBehaviour
         float launchRad = launchDeg * Mathf.Deg2Rad;
 
         // --- 3.  ball speed & spin 
-        float ballSpd  = clubSpd ;//* smashFactor;                // simple smash
-        float spinRpm  = dynLoft * spinPerLoft                 // 8‑iron ~8000‑9000
-                         * Mathf.InverseLerp(0f,50f, clubSpd); // scale for soft swings
-        float spinRad  = spinRpm * Mathf.Deg2Rad / 60f;        // to rad/s
+        float ballSpd  = clubSpd * smashFactor;               
+        float spinRpm  = dynLoft * spinPerLoft                 
+                         * Mathf.InverseLerp(0f,50f, clubSpd); 
+        float spinRad  = spinRpm * Mathf.Deg2Rad / 60f;       
 
         
 
@@ -159,7 +161,9 @@ public class ClubImpact2D : MonoBehaviour
         float mag = ball.linearVelocity.magnitude;
         Debug.Log($"[Launch] speed = {mag:F3}");
 
-        //Physics2D.IgnoreLayerCollision(clubLayer, ballLayer, true);
+        audioSource.PlayOneShot(hitSound);
+
+
         collider.enabled = false;
 
     }

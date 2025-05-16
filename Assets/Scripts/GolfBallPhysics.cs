@@ -28,9 +28,14 @@ public class GolfBallPhysics : MonoBehaviour
     private Vector2 firstTeePosition;
     public bool isGrounded;
     public bool inSand;
-    public bool inWater;
 
     public int Strokes { get; set; }
+
+    public AudioSource audioSource;   
+    public AudioClip holeSound;
+
+    public AudioSource audioSource2;
+    public AudioClip waterSound;
 
 
 
@@ -48,12 +53,6 @@ public class GolfBallPhysics : MonoBehaviour
     lastTeePosition = transform.position;        
     DeactivatePhysics();
     }
-
-/*     void Start()
-    {
-        // initialize tee position
-        lastTeePosition = transform.position;
-    } */
 
     public void ActivatePhysics()
     {
@@ -101,7 +100,7 @@ public class GolfBallPhysics : MonoBehaviour
         rb.angularVelocity   = 0f;
         InSand               = false;
         isGrounded           = false;
-        // do *not* reset strokes here if you want to count penalties
+
         sr.enabled           = true;
         col.enabled          = true;
         if (gameOverPanel != null)
@@ -115,7 +114,7 @@ public class GolfBallPhysics : MonoBehaviour
         rb.angularVelocity   = 0f;
         InSand               = false;
         isGrounded           = false;
-        // do *not* reset strokes here if you want to count penalties
+
         sr.enabled           = true;
         col.enabled          = true;
         if (gameOverPanel != null)
@@ -123,7 +122,6 @@ public class GolfBallPhysics : MonoBehaviour
     }
 
 
-    // call this whenever the player takes a shot
     public void RecordTeePosition()
     {
         lastTeePosition = transform.position;
@@ -132,18 +130,14 @@ public class GolfBallPhysics : MonoBehaviour
 
     private IEnumerator HandleBallInHole()
     {
-        // 1) stop physics & hide the ball
         DeactivatePhysics();
         sr.enabled  = false;
         col.enabled = false;
 
-        // 2) notify GameManager (increments hole state)
         GameManager.Instance.OnBallInHole();
 
-        // 3) wait a moment before showing GameOver UI
         yield return new WaitForSeconds(holeDelay);
 
-        // 4) show the Game Over / Play Again UI
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
     }
@@ -154,6 +148,7 @@ public class GolfBallPhysics : MonoBehaviour
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Water")) {
+            audioSource.PlayOneShot(waterSound);
             StartCoroutine(HandleReset("Water Hazard"));
         }
        
@@ -164,6 +159,7 @@ public class GolfBallPhysics : MonoBehaviour
 
         if (other.CompareTag("Hole")) {
             Debug.Log("In Hole");
+            audioSource.PlayOneShot(holeSound);
             StartCoroutine(HandleBallInHole());
         }
       
@@ -210,7 +206,7 @@ public class GolfBallPhysics : MonoBehaviour
     {
         get
         {
-            if (inSand)  return sandPenaltyFactor;
+            if (inSand) return sandPenaltyFactor;
             return 1f;
         }
     }
